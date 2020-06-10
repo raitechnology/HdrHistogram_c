@@ -53,3 +53,14 @@ test/perftest
 debug
 cmake-build-debug
 /build-afl
+
+!/.copr/Makefile
+# RPM build
+/rpmbuild
+# DEB build
+/dpkgbuild
+# Build temporaries
+/RH*
+/FC*
+/UB*
+/DEB*
