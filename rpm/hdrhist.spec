@@ -9,7 +9,9 @@ Source0:	%{name}-%{version}-99999.tar.gz
 BuildRoot:	${_tmppath}
 Prefix:	        /usr
 BuildRequires:  gcc-c++
+BuildRequires:  zlib-devel
 BuildRequires:  chrpath
+Requires:       zlib
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 

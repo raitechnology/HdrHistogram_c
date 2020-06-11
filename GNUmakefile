@@ -28,8 +28,8 @@ cc          := $(CC)
 clink       := $(CC)
 arch_cflags := -fno-omit-frame-pointer
 gcc_wflags  := -Wall -Wno-unknown-pragmas -Wextra -Wshadow -Winit-self -Wpedantic -Wmissing-prototypes
-fpicflags   := -fPIC -rdynamic
-soflag      := -shared -rdynamic
+fpicflags   := -fPIC
+soflag      := -shared
 rpath       := -Wl,-rpath,$(pwd)/$(libd)
 
 ifdef DEBUG
@@ -80,6 +80,7 @@ libhdrhist_deps  := $(addprefix $(dependd)/, $(addsuffix .d, $(libhdrhist_files)
                   $(addprefix $(dependd)/, $(addsuffix .fpic.d, $(libhdrhist_files)))
 libhdrhist_spec  := $(version)-$(build_num)
 libhdrhist_ver   := $(major_num).$(minor_num)
+libhdrhist_dlnk  := -lz
 
 $(libd)/libhdrhist.a: $(libhdrhist_objs)
 $(libd)/libhdrhist.so: $(libhdrhist_dbjs)
@@ -170,7 +171,7 @@ $(libd)/%.a:
 	ar rc $@ $($(*)_objs)
 
 $(libd)/%.so:
-	$(clink) $(soflag) $(rpath) $(cflags) -o $@.$($(*)_spec) -Wl,-soname=$(@F).$($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(cpp_dll_lnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
+	$(clink) $(soflag) $(rpath) $(cflags) -o $@.$($(*)_spec) -Wl,-soname=$(@F).$($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
 	cd $(libd) && ln -f -s $(@F).$($(*)_spec) $(@F).$($(*)_ver) && ln -f -s $(@F).$($(*)_ver) $(@F)
 
 $(bind)/%:
