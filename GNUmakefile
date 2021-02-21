@@ -127,7 +127,7 @@ endif
 # build all, then remove run paths embedded (use /etc/ld.conf.d instead)
 .PHONY: dist_bins
 dist_bins: all
-	$(remove_rpath) $(libd)/*.so
+	$(remove_rpath) $(libd)/libhdrhist.so
 
 .PHONY: dist_rpm
 dist_rpm: srpm

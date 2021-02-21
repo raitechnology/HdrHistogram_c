@@ -49,12 +49,12 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/usr/lib64/*
-/usr/include/*
-/usr/share/doc/*
+%{_prefix}/lib64/*
+%{_includedir}/*
+%doc %{_docdir}/*
 
 %post
-echo "${RPM_INSTALL_PREFIX}/lib64" > /etc/ld.so.conf.d/%{name}.conf
+echo "${_prefix}/lib64" > /etc/ld.so.conf.d/%{name}.conf
 /sbin/ldconfig
 
 %postun
