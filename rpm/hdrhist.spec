@@ -11,6 +11,7 @@ Prefix:	        /usr
 BuildRequires:  gcc-c++
 BuildRequires:  zlib-devel
 BuildRequires:  chrpath
+BuildRequires:  git-core
 Requires:       zlib
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
