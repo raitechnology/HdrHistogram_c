@@ -8,7 +8,7 @@ git_hash    := $(shell git rev-parse --short=8 HEAD)
 major_num   := 0
 minor_num   := 9
 patch_num   := 13
-build_num   := 1_$(git_hash)
+build_num   := 1
 
 version     := $(major_num).$(minor_num).$(patch_num)
 ver_build   := $(version)-$(build_num)

@@ -78,7 +78,7 @@ libhdrhist_objs  := $(addprefix $(objd)/, $(addsuffix .o, $(libhdrhist_files)))
 libhdrhist_dbjs  := $(addprefix $(objd)/, $(addsuffix .fpic.o, $(libhdrhist_files)))
 libhdrhist_deps  := $(addprefix $(dependd)/, $(addsuffix .d, $(libhdrhist_files))) \
                   $(addprefix $(dependd)/, $(addsuffix .fpic.d, $(libhdrhist_files)))
-libhdrhist_spec  := $(version)-$(build_num)
+libhdrhist_spec  := $(version)-$(build_num)_$(git_hash)
 libhdrhist_ver   := $(major_num).$(minor_num)
 libhdrhist_dlnk  := -lz
 
