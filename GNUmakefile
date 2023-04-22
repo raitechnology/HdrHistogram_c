@@ -1,10 +1,11 @@
+# HdrHistogram_c makefile
 # defines a directory for build, for example, RH6_x86_64
 lsb_dist     := $(shell if [ -f /etc/os-release ] ; then \
-		  grep '^NAME=' /etc/os-release | sed 's/.*=\"//' | sed 's/ .*//' ; \
+                  grep '^NAME=' /etc/os-release | sed 's/.*=[\"]*//' | sed 's/[ \"].*//' ; \
                   elif [ -x /usr/bin/lsb_release ] ; then \
                   lsb_release -is ; else echo Linux ; fi)
 lsb_dist_ver := $(shell if [ -f /etc/os-release ] ; then \
-		  grep '^VERSION=' /etc/os-release | sed 's/.*=\"//' | sed 's/ .*//' | sed 's/\"//' ; \
+		  grep '^VERSION=' /etc/os-release | sed 's/.*=[\"]*//' | sed 's/[ \"].*//' ; \
                   elif [ -x /usr/bin/lsb_release ] ; then \
                   lsb_release -rs | sed 's/[.].*//' ; else uname -r | sed 's/[-].*//' ; fi)
 #lsb_dist     := $(shell if [ -x /usr/bin/lsb_release ] ; then lsb_release -is ; else uname -s ; fi)
@@ -34,32 +35,51 @@ endif
 ifeq (-a,$(findstring -a,$(port_extra)))
   default_cflags := -fsanitize=address -ggdb -O3
 endif
-
+ifeq (-mingw,$(findstring -mingw,$(port_extra)))
+  CC    := /usr/bin/x86_64-w64-mingw32-gcc
+  mingw := true
+endif
+# msys2 using ucrt64
+ifeq (MSYS2,$(lsb_dist))
+  mingw := true
+endif
 CC          ?= gcc
 cc          := $(CC)
 clink       := $(CC)
 arch_cflags := -fno-omit-frame-pointer
 gcc_wflags  := -Wall -Wno-unknown-pragmas -Wextra -Wshadow -Winit-self -Wpedantic -Wmissing-prototypes
-fpicflags   := -fPIC
-soflag      := -shared
-rpath       := -Wl,-rpath,$(pwd)/$(libd)
-
+# if windows cross compile
+ifeq (true,$(mingw))
+sock_lib  := -lws2_32
+dll       := dll
+exe       := .exe
+soflag    := -shared -Wl,--subsystem,windows
+fpicflags := -fPIC -DHDR_SHARED
+else
+thread_lib := -lpthread
+dll        := so
+exe        :=
+soflag     := -shared
+fpicflags  := -fPIC
+endif
+# make apple shared lib
+ifeq (Darwin,$(lsb_dist))
+dll       := dylib
+endif
 # rpmbuild uses RPM_OPT_FLAGS
-#ifeq ($(RPM_OPT_FLAGS),)
-#CFLAGS ?= $(default_cflags)
-#else
-#CFLAGS ?= $(RPM_OPT_FLAGS)
-#endif
-CFLAGS := $(default_cflags)
+ifeq ($(RPM_OPT_FLAGS),)
+CFLAGS ?= $(default_cflags)
+else
+CFLAGS ?= $(RPM_OPT_FLAGS)
+endif
 cflags := $(gcc_wflags) $(CFLAGS) $(arch_cflags)
 
-INCLUDES    ?= 
-includes    := -Isrc $(INCLUDES)
-DEFINES     ?= 
-defines     := -D_GNU_SOURCE $(DEFINES)
-sock_lib    :=
-math_lib    := -lm
-thread_lib  := -pthread -lrt
+INCLUDES ?= 
+includes := -Isrc $(INCLUDES)
+DEFINES  ?= 
+defines  := -D_GNU_SOURCE $(DEFINES)
+rpath    := -Wl,-rpath,$(pwd)/$(libd)
+math_lib := -lm
 
 # before include, that has srpm target
 .PHONY: everything
@@ -90,9 +110,9 @@ libhdrhist_ver   := $(major_num).$(minor_num)
 libhdrhist_dlnk  := -lz
 
 $(libd)/libhdrhist.a: $(libhdrhist_objs)
-$(libd)/libhdrhist.so: $(libhdrhist_dbjs)
+$(libd)/libhdrhist.$(dll): $(libhdrhist_dbjs)
 
-all_libs    += $(libd)/libhdrhist.a $(libd)/libhdrhist.so
+all_libs    += $(libd)/libhdrhist.a $(libd)/libhdrhist.$(dll)
 all_depends += $(libhdrhist_deps)
 
 gen_files   :=
@@ -134,7 +154,7 @@ endif
 # build all, then remove run paths embedded (use /etc/ld.conf.d instead)
 .PHONY: dist_bins
 dist_bins: all
-	$(remove_rpath) $(libd)/libhdrhist.so
+	$(remove_rpath) $(libd)/libhdrhist.$(dll)
 
 .PHONY: dist_rpm
 dist_rpm: srpm
@@ -164,7 +184,7 @@ install: all
 	install $$f $(install_prefix)/lib$(install_lib_suffix) ; \
 	fi ; \
 	done
-	$(remove_rpath) $(install_prefix)/lib$(install_lib_suffix)/*.so
+	$(remove_rpath) $(install_prefix)/lib$(install_lib_suffix)/*.$(dll)
 	install -d $(install_prefix)/include $(install_prefix)/include/hdrhist
 	install -m 644 src/*.h $(install_prefix)/include/hdrhist/
 
@@ -177,11 +197,17 @@ $(objd)/%.fpic.o: src/%.c
 $(libd)/%.a:
 	ar rc $@ $($(*)_objs)
 
-$(libd)/%.so:
+ifeq (Darwin,$(lsb_dist))
+$(libd)/%.dylib:
+	$(clink) -dynamiclib $(cflags) -o $@.$($(*)_dylib).dylib -current_version $($(*)_dylib) -compatibility_version $($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
+	cd $(libd) && ln -f -s $(@F).$($(*)_dylib).dylib $(@F).$($(*)_ver).dylib && ln -f -s $(@F).$($(*)_ver).dylib $(@F)
+else
+$(libd)/%.$(dll):
 	$(clink) $(soflag) $(rpath) $(cflags) -o $@.$($(*)_spec) -Wl,-soname=$(@F).$($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
 	cd $(libd) && ln -f -s $(@F).$($(*)_spec) $(@F).$($(*)_ver) && ln -f -s $(@F).$($(*)_ver) $(@F)
+endif
 
-$(bind)/%:
+$(bind)/%$(exe):
 	$(clink) $(cflags) $(rpath) -o $@ $($(*)_objs) -L$(libd) $($(*)_lnk) $(cpp_lnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib)
 
 $(dependd)/%.d: %.c
