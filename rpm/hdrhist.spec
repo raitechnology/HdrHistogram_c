@@ -44,6 +44,11 @@ mkdir -p  %{buildroot}
 
 # in builddir
 cp -a * %{buildroot}
+# Drop the vendored test tree (google/benchmark submodule, pulled in by COPR's
+# --recursive clone). It is not in %files, but brp-mangle-shebangs scans the
+# whole buildroot and hard-fails on its ambiguous '#!/usr/bin/env python'
+# shebangs. Removing it here fixes the class and slims the buildroot.
+rm -rf %{buildroot}/test
 
 %clean
 rm -rf %{buildroot}
