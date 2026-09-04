@@ -54,7 +54,7 @@ arch_cflags := -fno-omit-frame-pointer
 gcc_wflags  := -Wall -Wno-unknown-pragmas -Wextra -Wshadow -Winit-self -Wpedantic -Wmissing-prototypes
 # if windows cross compile
 ifeq (true,$(mingw))
-sock_lib  := -lws2_32
+sock_lib  := -lws2_32 -lpsapi
 dll       := dll
 exe       := .exe
 soflag    := -shared -Wl,--subsystem,windows
