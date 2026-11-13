@@ -14,7 +14,7 @@ git_hash    := $(shell git rev-parse --short=8 HEAD)
 major_num   := 0
 minor_num   := 9
 patch_num   := 14
-build_num   := 4
+build_num   := 5
 
 version     := $(major_num).$(minor_num).$(patch_num)
 ver_build   := $(version)-$(build_num)
@@ -43,3 +43,6 @@ rpmbuild/SOURCES/$(name_ver).tar.gz:
 .PHONY: spec_version
 spec_version:
 	@echo "$(name)_dep := $(major_num).$(minor_num)"
+.PHONY: spec_build
+spec_build:
+	@echo "$(name)_build := $(ver_build)"

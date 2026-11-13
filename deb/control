@@ -7,7 +7,7 @@ Standards-Version: 3.9.5
 Homepage: https://www.github.com/HdrHistogram/HdrHistogram_c
 
 Package: hdrhist
-Architecture: amd64
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: High Dynamic Range (HDR) Histogram
  This 'C' port of HDR contains a subset of the functionality supported by the
